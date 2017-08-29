@@ -53,7 +53,7 @@ class Rfc6570Generator extends UrlGenerator implements UrlGeneratorInterface, Co
             if ('variable' === $token[0]) {
                 if (!$optional || !array_key_exists($token[3], $defaults) || (string) $mergedParams[$token[3]] !== (string) $defaults[$token[3]]) {
                     // check requirement
-                    if (null !== $this->strictRequirements && !$this->isPlaceHolder($mergedParams[$token[3]]) && !preg_match('#^'.$token[2].'$#', $mergedParams[$token[3]])) {
+                    if (null !== $this->strictRequirements && !preg_match('#^'.$token[2].'$#', $mergedParams[$token[3]])) {
                         $message = sprintf('Parameter "%s" for route "%s" must match "%s" ("%s" given) to generate a corresponding URL.', $token[3], $name, $token[2], $mergedParams[$token[3]]);
                         if ($this->strictRequirements) {
                             throw new InvalidParameterException($message);
@@ -155,24 +155,16 @@ class Rfc6570Generator extends UrlGenerator implements UrlGeneratorInterface, Co
         // add a query string if needed
         $extra = array_diff_key($parameters, $variables, $defaults);
         if (is_array($extra) && !empty($extra)) {
-            $parts = array();
+            $url .= '?';
             foreach ($extra as $key => $value) {
                 if (is_scalar($value)) {
-                    $parts[] = urlencode($key);
+                    $url .= '{&' . $key . '}';
                 } elseif (is_array($value)) {
-                    $parts[] = urlencode($key) . '%5B%5D*';
+                    $url .= '{&' . $key . '%5B%5D*}';
                 }
             }
-            $url .= '{?' . implode(',', $parts) . '}';
         }
 
         return $url;
-    }
-
-    private function isPlaceHolder($param)
-    {
-        $length = strlen($param);
-
-        return $length > 2 && '{' === $param[0] && '}' === $param[$length - 1];
     }
 }
